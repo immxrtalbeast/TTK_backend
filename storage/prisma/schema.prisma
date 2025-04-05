@@ -40,23 +40,23 @@ enum EventType {
 }
 
 model User {
-  id              String   @id @default(uuid())
-  login           String   @unique
-  passwordHash    String
-  fullName        String
-  role            Role     @default(USER)
-  createdAt       DateTime @default(now())
-  deletedAt       DateTime?
-  tasks           Task[]
-  updatedArticles ArticleHistory[]
+  id                  String   @id @default(uuid())
+  login               String   @unique
+  passwordHash        String
+  fullName            String
+  role                Role     @default(USER)
+  createdAt           DateTime @default(now())
+  deletedAt           DateTime?
+  tasks               Task[]
 }
 
 model Article {
   id                String   @id @default(uuid())
   title             String
-  updatedAt         DateTime?
+  updatedAt         DateTime @default(now())
   createdAt         DateTime @default(now())
-  name_last_reedit  String?
+  lastEditorName    String
+  creatorName       String
   image             String
   content           String?
 }
@@ -65,7 +65,6 @@ model ArticleHistory {
   id           String   @id @default(uuid())
   articleId    String   // ID статьи (без внешнего ключа, если требуется независимость)
   userId       String
-  user         User     @relation(fields: [userId], references: [id])
   changedAt    DateTime @default(now())
   eventType    EventType   // 'create', 'update', 'delete'
   articleTitle String   // Сохраняем название на момент изменения

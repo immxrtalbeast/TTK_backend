@@ -57,6 +57,8 @@ func main() {
 		{
 			article.POST("/create", articleController.CreateArticle)
 			article.GET("/:id", articleController.Article)
+			article.GET("/get_page", articleController.Articles)
+			article.DELETE("/:id", articleController.DeleteArticle)
 		}
 		task := api.Group("/task")
 		// task.Use(authMiddleware)

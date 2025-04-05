@@ -17,20 +17,38 @@ func ValidateUser(userDB db.UserModel) domain.User {
 }
 
 func ValidateArticle(articleDB db.ArticleModel) domain.Article {
-	updated, _ := articleDB.UpdatedAt()
-	nameLastReedit, _ := articleDB.NameLastReedit()
 	content, _ := articleDB.Content()
 	atricle := domain.Article{
-		ID:               articleDB.ID,
-		Title:            articleDB.Title,
-		UpdatedAt:        updated,
-		CreatedAt:        articleDB.CreatedAt,
-		Name_last_reedit: nameLastReedit,
-		Image:            articleDB.Image,
-		Content:          content,
+		ID:         articleDB.ID,
+		Title:      articleDB.Title,
+		UpdatedAt:  articleDB.UpdatedAt,
+		CreatedAt:  articleDB.CreatedAt,
+		Creator:    articleDB.CreatorName,
+		LastEditor: articleDB.LastEditorName,
+		Image:      articleDB.Image,
+		Content:    content,
 	}
 	return atricle
 
+}
+
+//	ID           string
+// Title        string
+// ArticleId    string
+// UserId       string
+// ChangedAt    time.Time
+// EventType    EventType
+// ArticleTitle string
+
+func ValidateArticleHistory(historyDB db.ArticleHistoryModel) domain.History {
+	history := domain.History{
+		ID:           historyDB.ID,
+		UserId:       historyDB.UserID,
+		ChangedAt:    historyDB.ChangedAt,
+		EventType:    domain.EventType(historyDB.EventType),
+		ArticleTitle: historyDB.ArticleID,
+	}
+	return history
 }
 
 func ValidateTask(taskDB db.TaskModel) domain.Task {
