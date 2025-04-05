@@ -1,0 +1,4 @@
+env: "local"
+storage_path: "./storage/dcp.db"
+token_ttl: 1h
+app_secret: "TTK_HACKAHTHON"

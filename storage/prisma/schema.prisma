@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider = "go run github.com/steebchen/prisma-client-go"
+  engineType = "binary" // Добавьте это
+}
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  
+}
+
+enum Priority {
+ LOW
+ MIDDLE
+ HIGH
+}
+
+enum Status {
+ CURRENT
+ PENDING
+ COMPLETED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventType {
+  CREATE
+  UPDATED
+  DELETE
+}
+
+model User {
+  id              String   @id @default(uuid())
+  login           String   @unique
+  passwordHash    String
+  fullName        String
+  role            Role     @default(USER)
+  createdAt       DateTime @default(now())
+  deletedAt       DateTime?
+  tasks           Task[]
+  updatedArticles ArticleHistory[]
+}
+
+model Article {
+  id                String   @id @default(uuid())
+  title             String
+  updatedAt         DateTime?
+  createdAt         DateTime @default(now())
+  name_last_reedit  String?
+  image             String
+  content           String?
+}
+
+model ArticleHistory {
+  id           String   @id @default(uuid())
+  articleId    String   // ID статьи (без внешнего ключа, если требуется независимость)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  changedAt    DateTime @default(now())
+  eventType    EventType   // 'create', 'update', 'delete'
+  articleTitle String   // Сохраняем название на момент изменения
+}
+
+model Task {
+  id         String   @id @default(uuid())
+  title      String
+  createdAt  DateTime @default(now())
+  userID     String
+  user       User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  plannedAt  DateTime
+  priority   Priority     
+  status     Status
+}
+
+
