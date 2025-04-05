@@ -147,74 +147,60 @@ func (s *Storage) DeleteArticle(ctx context.Context, id string) error {
 
 // HISTORY
 
-// func (s *Storage) InitHistory(ctx context.Context, article *domain.Article) error {
-// 	const op = "storage.history.init"
-// 	user := db.User.ID.Equals(article.Name_last_reedit)
-// 	_, err := s.client.ArticleHistory.CreateOne(
-// 		db.ArticleHistory.ArticleID.Set(article.ID),
-// 		db.ArticleHistory.User.Link(user),
-// 		db.ArticleHistory.EventType.Set("CREATE"),
-// 		db.ArticleHistory.ArticleTitle.Set(article.Title),
-// 		db.ArticleHistory.ChangedAt.Set(time.Now()),
-// 	).Exec(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("%s: %w", op, err)
-// 	}
-// 	return nil
-// }
+func (s *Storage) InitHistory(ctx context.Context, history *domain.History) error {
+	const op = "storage.history.init"
+	_, err := s.client.ArticleHistory.CreateOne(
+		db.ArticleHistory.ArticleID.Set(history.ArticleId),
+		db.ArticleHistory.UserID.Set(history.UserId),
+		db.ArticleHistory.EventType.Set(db.EventTypeCreate),
+		db.ArticleHistory.ArticleTitle.Set(history.ArticleTitle),
+	).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
 
-// func (s *Storage) HistoryByID(ctx context.Context, id string) (*domain.History, error) {
-// 	const op = "storage.history.by_id"
-// 	historyDB, err := s.client.ArticleHistory.FindUnique(db.ArticleHistory.ID.Equals(id)).Exec(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%s: %w", op, err)
-// 	}
-// 	history := ValidateArticleHistory(*historyDB)
-// 	return &history, nil
-// }
+func (s *Storage) UpdateHistory(ctx context.Context, history *domain.History) error {
+	const op = "storage.history.init"
+	_, err := s.client.ArticleHistory.CreateOne(
+		db.ArticleHistory.ArticleID.Set(history.ArticleId),
+		db.ArticleHistory.UserID.Set(history.UserId),
+		db.ArticleHistory.EventType.Set(db.EventType(history.EventType)),
+		db.ArticleHistory.ArticleTitle.Set(history.ArticleTitle),
+	).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
 
-// func (s *Storage) Histories(ctx context.Context) ([]*domain.History, error) {
-// 	const op = "storage.history.all"
-// 	historiesDB, err := s.client.ArticleHistory.FindMany().Exec(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%s: %w", op, err)
-// 	}
-// 	var histories []*domain.History
-// 	for _, historyDB := range historiesDB {
-// 		history := ValidateArticleHistory(historyDB)
-// 		histories = append(histories, &history)
-// 	}
-// 	return histories, nil
-// }
+func (s *Storage) Histories(ctx context.Context, page, limit int) ([]*domain.History, error) {
+	const op = "storage.history.all"
 
-// func (s *Storage) HistoryByArticleID(ctx context.Context, article_id string) ([]*domain.History, error) {
-// 	const op = "storage.history.by_article_id"
-// 	historiesDB, err := s.client.ArticleHistory.FindMany(db.ArticleHistory.ArticleID.Equals(article_id)).Exec(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("%s: %w", op, err)
-// 	}
-// 	var histories []*domain.History
-// 	for _, historyDB := range historiesDB {
-// 		history := ValidateArticleHistory(historyDB)
-// 		histories = append(histories, &history)
-// 	}
-// 	return histories, nil
-// }
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 6 // значение по умолчанию
+	}
+	skip := (page - 1) * limit
+	historiesDB, err := s.client.ArticleHistory.FindMany().
+		Take(limit). // Количество элементов на странице
+		Skip(skip).
+		OrderBy(db.ArticleHistory.ChangedAt.Order(db.ASC)). // Сколько элементов пропуститьA
+		Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
-// func (s *Storage) AddHistory(ctx context.Context, articleID string, userID string, eventType domain.EventType, articleTitle string) error {
-// 	const op = "storage.history.update"
-// 	user := db.User.ID.Equals(userID)
-// 	_, err := s.client.ArticleHistory.CreateOne(
-// 		db.ArticleHistory.ArticleID.Set(articleID),
-// 		db.ArticleHistory.User.Link(user),
-// 		db.ArticleHistory.EventType.Set(db.EventType(eventType)),
-// 		db.ArticleHistory.ArticleTitle.Set(articleTitle),
-// 	).Exec(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("%s: %w", op, err)
-// 	}
-// 	return nil
-// }
+	var histories []*domain.History
+	for _, historyDB := range historiesDB {
+		history := ValidateArticleHistory(historyDB)
+		histories = append(histories, &history)
+	}
+	return histories, nil
+}
 
 //TASK
 

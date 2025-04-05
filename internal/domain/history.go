@@ -22,8 +22,14 @@ type History struct {
 	ArticleTitle string
 }
 
-type HistoryRepository interface {
-	InitHistory(ctx context.Context, article *Article) error
-	HistoryByID(ctx context.Context, id string) (*History, error)
+type HistoryInteractor interface {
+	InitHistory(ctx context.Context, articleID string, userID string, articleTitle string) error
 	UpdateHistory(ctx context.Context, articleID string, userID string, eventType EventType, articleTitle string) error
+	Histories(ctx context.Context, page, limit int) ([]*History, error)
+}
+
+type HistoryRepository interface {
+	InitHistory(ctx context.Context, history *History) error
+	UpdateHistory(ctx context.Context, history *History) error
+	Histories(ctx context.Context, page, limit int) ([]*History, error)
 }

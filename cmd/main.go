@@ -10,6 +10,7 @@ import (
 	"github.com/immxrtalbeast/TTK_backend/internal/controller"
 	"github.com/immxrtalbeast/TTK_backend/internal/middleware"
 	"github.com/immxrtalbeast/TTK_backend/internal/usecase/article"
+	"github.com/immxrtalbeast/TTK_backend/internal/usecase/history"
 	"github.com/immxrtalbeast/TTK_backend/internal/usecase/task"
 	"github.com/immxrtalbeast/TTK_backend/internal/usecase/user"
 	"github.com/immxrtalbeast/TTK_backend/storage/prisma"
@@ -35,9 +36,10 @@ func main() {
 	//TODO: validate data, implement more methods. think about history
 	userINT := user.NewUserInteractor(db, cfg.TokenTTL, cfg.AppSecret)
 	userController := controller.NewUserController(userINT)
+	historyINT := history.NewHistoryInteractor(db)
 
 	articleINT := article.NewArticleInteractor(db)
-	articleController := controller.NewArticleController(articleINT, log)
+	articleController := controller.NewArticleController(articleINT, historyINT, log)
 
 	taskINT := task.NewTaskInteractor(db)
 	taskController := controller.NewTaskController(taskINT)

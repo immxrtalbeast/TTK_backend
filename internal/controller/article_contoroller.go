@@ -9,12 +9,13 @@ import (
 )
 
 type ArticleController struct {
-	interactor domain.ArticleInteractor
-	log        *slog.Logger
+	interactor  domain.ArticleInteractor
+	hInteractor domain.HistoryInteractor
+	log         *slog.Logger
 }
 
-func NewArticleController(interactor domain.ArticleInteractor, log *slog.Logger) *ArticleController {
-	return &ArticleController{interactor: interactor, log: log}
+func NewArticleController(interactor domain.ArticleInteractor, hinteractor domain.HistoryInteractor, log *slog.Logger) *ArticleController {
+	return &ArticleController{interactor: interactor, hInteractor: hinteractor, log: log}
 }
 
 func (c *ArticleController) Article(ctx *gin.Context) {
@@ -66,7 +67,7 @@ func (c *ArticleController) Articles(ctx *gin.Context) {
 func (c *ArticleController) CreateArticle(ctx *gin.Context) {
 	type CreateArticleRequest struct {
 		Title   string `json:"title" binding:"required,min=3,max=50"`
-		Image   string `json:"image" binding:"required"`
+		Image   string `json:"image"`
 		Content string `json:"content"`
 	}
 	var req CreateArticleRequest
@@ -86,6 +87,14 @@ func (c *ArticleController) CreateArticle(ctx *gin.Context) {
 		})
 		return
 	}
+	err = c.hInteractor.InitHistory(ctx, article.ID, userID, req.Title)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to create history",
+			"details": err.Error(),
+		})
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"article": article,
 	})
@@ -99,6 +108,7 @@ func (c *ArticleController) DeleteArticle(ctx *gin.Context) {
 		return
 	}
 	userID, _ := ctx.Keys["userID"].(string)
+	article, _ := c.interactor.Article(ctx, id)
 	err := c.interactor.DeteleArticle(ctx, id, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -107,6 +117,7 @@ func (c *ArticleController) DeleteArticle(ctx *gin.Context) {
 		})
 		return
 	}
+	c.hInteractor.UpdateHistory(ctx, id, userID, domain.EventType("DELETE"), article.Title)
 	ctx.JSON(http.StatusOK, gin.H{})
 }
 func (c *ArticleController) UpdateArticle(ctx *gin.Context) {
@@ -125,6 +136,7 @@ func (c *ArticleController) UpdateArticle(ctx *gin.Context) {
 		return
 	}
 	userName, _ := ctx.Keys["userName"].(string)
+	userID, _ := ctx.Keys["userID"].(string)
 	article, err := c.interactor.UpdateArticle(ctx, req.ID, req.Title, req.Image, req.Content, userName)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -133,6 +145,7 @@ func (c *ArticleController) UpdateArticle(ctx *gin.Context) {
 		})
 		return
 	}
+	c.hInteractor.UpdateHistory(ctx, article.ID, userID, domain.EventType("UPDATED"), article.Title)
 	ctx.JSON(http.StatusOK, gin.H{
 		"article": article,
 	})
