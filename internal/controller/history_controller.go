@@ -16,7 +16,7 @@ func NewHistoryController(interactor domain.HistoryInteractor) *HistoryControlle
 	return &HistoryController{interactor: interactor}
 }
 
-func (c *HistoryController) History(ctx *gin.Context) {
+func (c *HistoryController) HistoryArticles(ctx *gin.Context) {
 	pageStr := ctx.DefaultQuery("p", "1")
 	limitStr := ctx.DefaultQuery("limit", "6")
 	page, _ := strconv.Atoi(pageStr)

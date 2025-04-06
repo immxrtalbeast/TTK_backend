@@ -10,11 +10,12 @@ import (
 )
 
 type TaskController struct {
-	interactor domain.TaskInteractor
+	interactor  domain.TaskInteractor
+	hInteractor domain.HistoryInteractor
 }
 
-func NewTaskController(interactor domain.TaskInteractor) *TaskController {
-	return &TaskController{interactor: interactor}
+func NewTaskController(interactor domain.TaskInteractor, hInteractor domain.HistoryInteractor) *TaskController {
+	return &TaskController{interactor: interactor, hInteractor: hInteractor}
 }
 
 func (c *TaskController) Task(ctx *gin.Context) {
@@ -90,7 +91,7 @@ func (c *TaskController) UpdateTask(ctx *gin.Context) {
 func (c *TaskController) CreateTask(ctx *gin.Context) {
 	type CreateTaskRequest struct {
 		Title     string          `json:"title" binding:"required,min=3,max=50"`
-		Image     string          `json:"image" binding:"required"`
+		Image     string          `json:"image"`
 		Content   string          `json:"content"`
 		UserID    string          `json:"user_id"`
 		PlannedAt time.Time       `json:"planned_at"`
@@ -106,7 +107,7 @@ func (c *TaskController) CreateTask(ctx *gin.Context) {
 		return
 	}
 
-	taskID, err := c.interactor.CreateTask(ctx, req.Title, req.Image, req.Content, req.UserID, req.Priority, req.Status)
+	taskID, err := c.interactor.CreateTask(ctx, req.Title, req.Image, req.Content, req.PlannedAt, req.UserID, req.Priority, req.Status)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "failed to create task",

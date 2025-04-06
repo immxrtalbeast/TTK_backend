@@ -45,9 +45,10 @@ func ValidateArticleHistory(historyDB db.ArticleHistoryModel) domain.History {
 	history := domain.History{
 		ID:           historyDB.ID,
 		UserId:       historyDB.UserID,
+		ArticleId:    historyDB.ArticleID,
 		ChangedAt:    historyDB.ChangedAt,
 		EventType:    domain.EventType(historyDB.EventType),
-		ArticleTitle: historyDB.ArticleID,
+		ArticleTitle: historyDB.ArticleTitle,
 	}
 	return history
 }

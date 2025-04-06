@@ -34,7 +34,7 @@ type Task struct {
 }
 
 type TaskInteractor interface {
-	CreateTask(ctx context.Context, title string, image string, content string, userID string, priority Priority, status Status) (string, error)
+	CreateTask(ctx context.Context, title string, image string, content string, planned_at time.Time, userID string, priority Priority, status Status) (string, error)
 	Task(ctx context.Context, id string) (*Task, error)
 	Tasks(ctx context.Context, page, limit int) ([]*Task, error)
 	UpdateTask(ctx context.Context, id string, title string, image string, content string, userID string, priority Priority, status Status) error

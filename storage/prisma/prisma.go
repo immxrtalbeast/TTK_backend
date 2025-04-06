@@ -119,7 +119,6 @@ func (s *Storage) CreateArticle(ctx context.Context, article *domain.Article) (s
 		db.Article.LastEditorName.Set(article.LastEditor),
 		db.Article.CreatorName.Set(article.LastEditor),
 		db.Article.Image.Set(article.Image),
-		db.Article.UpdatedAt.Set(article.UpdatedAt),
 		db.Article.Content.Set(article.Content),
 	).Exec(ctx)
 

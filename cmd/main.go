@@ -44,7 +44,7 @@ func main() {
 	articleController := controller.NewArticleController(articleINT, historyINT, log)
 
 	taskINT := task.NewTaskInteractor(db)
-	taskController := controller.NewTaskController(taskINT)
+	taskController := controller.NewTaskController(taskINT, historyINT)
 
 	authMiddleware := middleware.AuthMiddleware(cfg.AppSecret)
 	router := gin.Default()
@@ -79,7 +79,11 @@ func main() {
 			task.POST("/update", taskController.UpdateTask)
 			task.DELETE("/:id", taskController.DeleteTask)
 		}
-		api.GET("/history", historyController.History).Use(authMiddleware)
+		history := api.Group("/history")
+		history.Use(authMiddleware)
+		{
+			history.GET("/articles", historyController.HistoryArticles)
+		}
 		api.POST("/register", userController.CreateUser)
 		api.GET("/user/:id", userController.User)
 		api.POST("/login", userController.Login)

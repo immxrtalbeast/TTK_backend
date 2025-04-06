@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/immxrtalbeast/TTK_backend/internal/domain"
 	"github.com/immxrtalbeast/TTK_backend/storage/prisma/db"
@@ -67,15 +68,16 @@ func (ai *TaskInteractor) DeleteTask(ctx context.Context, id string) error {
 	return nil
 }
 
-func (ai *TaskInteractor) CreateTask(ctx context.Context, title string, image string, content string, userID string, priority domain.Priority, status domain.Status) (string, error) {
+func (ai *TaskInteractor) CreateTask(ctx context.Context, title string, image string, content string, planned_at time.Time, userID string, priority domain.Priority, status domain.Status) (string, error) {
 	const op = "uc.task.create"
 	task := domain.Task{
-		Title:    title,
-		Image:    image,
-		Content:  content,
-		UserID:   userID,
-		Priority: priority,
-		Status:   status,
+		Title:     title,
+		Image:     image,
+		Content:   content,
+		PlannedAt: planned_at,
+		UserID:    userID,
+		Priority:  priority,
+		Status:    status,
 	}
 
 	taskID, err := ai.taskRepo.CreateTask(ctx, &task)
