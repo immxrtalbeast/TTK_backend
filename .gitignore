@@ -4,3 +4,4 @@ node_modules
 **/*_gen.go
 *.sql
 local.yaml
+config/local.yaml

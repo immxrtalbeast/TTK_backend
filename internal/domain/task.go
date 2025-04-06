@@ -22,15 +22,16 @@ const (
 )
 
 type Task struct {
-	ID        string
-	Title     string
-	Content   string
-	Image     string
-	CreatedAt time.Time
-	UserID    string
-	PlannedAt time.Time
-	Priority  Priority
-	Status    Status
+	ID               string
+	Title            string
+	Content          string
+	Image            string
+	CreatedAt        time.Time
+	UserID           string
+	ReliableUserName string
+	PlannedAt        time.Time
+	Priority         Priority
+	Status           Status
 }
 
 type TaskInteractor interface {

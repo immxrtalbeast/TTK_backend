@@ -54,14 +54,17 @@ func ValidateArticleHistory(historyDB db.ArticleHistoryModel) domain.History {
 }
 
 func ValidateTask(taskDB db.TaskModel) domain.Task {
+	respUser := taskDB.Responsibleuser()
+	user := ValidateUser(*respUser)
 	task := domain.Task{
-		ID:        taskDB.ID,
-		Title:     taskDB.Title,
-		UserID:    taskDB.UserID,
-		PlannedAt: taskDB.PlannedAt,
-		CreatedAt: taskDB.CreatedAt,
-		Priority:  domain.Priority(taskDB.Priority),
-		Status:    domain.Status(taskDB.Status),
+		ID:               taskDB.ID,
+		Title:            taskDB.Title,
+		ReliableUserName: user.Name,
+		UserID:           taskDB.UserID,
+		PlannedAt:        taskDB.PlannedAt,
+		CreatedAt:        taskDB.CreatedAt,
+		Priority:         domain.Priority(taskDB.Priority),
+		Status:           domain.Status(taskDB.Status),
 	}
 	return task
 }

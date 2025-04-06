@@ -79,8 +79,12 @@ func (ui *UserInteractor) Users(ctx context.Context, page int, limit int) ([]*do
 	return users, nil
 }
 
-func (ui *UserInteractor) UpdateUser(ctx context.Context, id string, name string, login string, passhash string, role domain.Role) error {
+func (ui *UserInteractor) UpdateUser(ctx context.Context, id string, name string, login string, pass string, role domain.Role) error {
 	const op = "uc.user.update"
+	passhash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	user := domain.User{
 		ID:       id,
 		Name:     name,
@@ -88,7 +92,7 @@ func (ui *UserInteractor) UpdateUser(ctx context.Context, id string, name string
 		PassHash: []byte(passhash),
 		IsAdmin:  role,
 	}
-	err := ui.userRepo.UpdateUser(ctx, &user)
+	err = ui.userRepo.UpdateUser(ctx, &user)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

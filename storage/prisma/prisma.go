@@ -285,7 +285,8 @@ func (s *Storage) Tasks(ctx context.Context, page, limit int) ([]*domain.Task, e
 	tasksDB, err := s.client.Task.FindMany().
 		Take(limit). // Количество элементов на странице
 		Skip(skip).
-		OrderBy(db.Task.CreatedAt.Order(db.ASC)). // Сколько элементов пропуститьA
+		OrderBy(db.Task.CreatedAt.Order(db.ASC)).
+		With(db.Task.Responsibleuser.Fetch()). // Сколько элементов пропуститьA
 		Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

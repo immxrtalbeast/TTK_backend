@@ -141,14 +141,44 @@ func (c *UserController) Users(ctx *gin.Context) {
 }
 func (c *UserController) UpdateUser(ctx *gin.Context) {
 	type UpdateUserRequest struct {
-		ID        string    `json:"id" binding:"required"`
-		Name      string    `json:"name" binding:"required"`
-		Login     string    `json:"login" binding:"required"`
-		PassHash  []byte    `json:"passhash" binding:"required"`
-		CreatedAt time.Time `json:"createdat"`
-		IsAdmin   domain.Role
+		ID        string      `json:"id" binding:"required"`
+		Name      string      `json:"name" binding:"required"`
+		Login     string      `json:"login" binding:"required"`
+		Pass      string      `json:"password" binding:"required"`
+		CreatedAt time.Time   `json:"createdat"`
+		IsAdmin   domain.Role `json:"role"`
 	}
 	var req UpdateUserRequest
+
+	// Валидация логина
+	loginRegex := regexp.MustCompile(`^[a-zA-Z]+$`)
+	if !loginRegex.MatchString(req.Login) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid login",
+			"details": "Login must contain only latin letters",
+		})
+		return
+	}
+
+	// Валидация имени
+	nameRegex := regexp.MustCompile(`^[а-яА-ЯёЁ\s]+$`)
+	if !nameRegex.MatchString(req.Name) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid name",
+			"details": "Name must contain only russian letters and spaces",
+		})
+		return
+	}
+
+	// Валидация пароля
+	passRegex := regexp.MustCompile(`^[a-zA-Z0-9!@#$%^&*()_+\[\]{};:<>,./?~\\-]+$`)
+	if !passRegex.MatchString(req.Pass) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid password",
+			"details": "Password contains forbidden characters",
+		})
+		return
+	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "invalid request body",
@@ -156,10 +186,10 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 		})
 		return
 	}
-	err := c.interactor.UpdateUser(ctx, req.ID, req.Name, req.Login, string(req.PassHash), req.IsAdmin)
+	err := c.interactor.UpdateUser(ctx, req.ID, req.Name, req.Login, req.Pass, req.IsAdmin)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "failed to get users",
+			"error":   "failed to update user",
 			"details": err.Error(),
 		})
 		return
