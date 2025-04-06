@@ -70,3 +70,35 @@ func (ui *UserInteractor) User(ctx context.Context, id string) (*domain.User, er
 	}
 	return user, nil
 }
+func (ui *UserInteractor) Users(ctx context.Context, page int, limit int) ([]*domain.User, error) {
+	const op = "uc.user.all"
+	users, err := ui.userRepo.Users(ctx, page, limit)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return users, nil
+}
+
+func (ui *UserInteractor) UpdateUser(ctx context.Context, id string, name string, login string, passhash string, role domain.Role) error {
+	const op = "uc.user.update"
+	user := domain.User{
+		ID:       id,
+		Name:     name,
+		Login:    login,
+		PassHash: []byte(passhash),
+		IsAdmin:  role,
+	}
+	err := ui.userRepo.UpdateUser(ctx, &user)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+func (ui *UserInteractor) DeleteUser(ctx context.Context, id string) error {
+	const op = "uc.user.delete"
+	err := ui.userRepo.DeleteUser(ctx, id)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}

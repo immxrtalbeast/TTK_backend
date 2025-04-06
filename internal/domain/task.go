@@ -36,11 +36,15 @@ type Task struct {
 type TaskInteractor interface {
 	CreateTask(ctx context.Context, title string, image string, content string, userID string, priority Priority, status Status) (string, error)
 	Task(ctx context.Context, id string) (*Task, error)
+	Tasks(ctx context.Context, page, limit int) ([]*Task, error)
+	UpdateTask(ctx context.Context, id string, title string, image string, content string, userID string, priority Priority, status Status) error
+	DeleteTask(ctx context.Context, id string) error
 }
 
 type TaskRepository interface {
 	CreateTask(ctx context.Context, task *Task) (string, error)
 	Task(ctx context.Context, id string) (*Task, error)
-	// UpdateTaskStatus(ctx context.Context, status Status) error
-	// DeleteTask(ctx context.Context, id string) error
+	Tasks(ctx context.Context, page, limit int) ([]*Task, error)
+	UpdateTask(ctx context.Context, task *Task) error
+	DeleteTask(ctx context.Context, id string) error
 }

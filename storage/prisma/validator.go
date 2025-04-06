@@ -7,11 +7,12 @@ import (
 
 func ValidateUser(userDB db.UserModel) domain.User {
 	user := domain.User{
-		ID:       userDB.ID,
-		Name:     userDB.FullName,
-		Login:    userDB.Login,
-		PassHash: []byte(userDB.PasswordHash),
-		IsAdmin:  domain.Role(userDB.Role),
+		ID:        userDB.ID,
+		Name:      userDB.FullName,
+		Login:     userDB.Login,
+		PassHash:  []byte(userDB.PasswordHash),
+		CreatedAt: userDB.CreatedAt,
+		IsAdmin:   domain.Role(userDB.Role),
 	}
 	return user
 }

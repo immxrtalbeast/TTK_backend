@@ -19,7 +19,7 @@ import (
 
 // go run cmd/main.go --config=./config/local.yaml
 
-// perpage articles, tasks,
+// controller user,
 func main() {
 	cfg := config.MustLoad()
 	log := setupLogger()
@@ -38,6 +38,8 @@ func main() {
 	userController := controller.NewUserController(userINT)
 	historyINT := history.NewHistoryInteractor(db)
 
+	historyController := controller.NewHistoryController(historyINT)
+
 	articleINT := article.NewArticleInteractor(db)
 	articleController := controller.NewArticleController(articleINT, historyINT, log)
 
@@ -50,6 +52,12 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowCredentials = true
+	config.AllowHeaders = []string{
+		"Authorization",
+		"Content-Type",
+		"Origin",
+		"Accept",
+	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	router.Use(cors.New(config))
 	api := router.Group("/api/v1")
@@ -59,15 +67,19 @@ func main() {
 		{
 			article.POST("/create", articleController.CreateArticle)
 			article.GET("/:id", articleController.Article)
-			article.GET("/get_page", articleController.Articles)
+			article.GET("/show", articleController.Articles)
 			article.DELETE("/:id", articleController.DeleteArticle)
 		}
 		task := api.Group("/task")
-		// task.Use(authMiddleware)
+		task.Use(authMiddleware)
 		{
 			task.POST("/create", taskController.CreateTask)
 			task.GET("/:id", taskController.Task)
+			task.GET("/show", taskController.Tasks)
+			task.POST("/update", taskController.UpdateTask)
+			task.DELETE("/:id", taskController.DeleteTask)
 		}
+		api.GET("/history", historyController.History).Use(authMiddleware)
 		api.POST("/register", userController.CreateUser)
 		api.GET("/user/:id", userController.User)
 		api.POST("/login", userController.Login)

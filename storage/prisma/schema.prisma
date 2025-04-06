@@ -73,12 +73,15 @@ model ArticleHistory {
 model Task {
   id         String   @id @default(uuid())
   title      String
+  content    String
+  image      String
   createdAt  DateTime @default(now())
   userID     String
-  user       User     @relation(fields: [userID], references: [id], onDelete: Cascade)
+  responsibleuser       User     @relation(fields: [userID], references: [id], onDelete: Cascade)
   plannedAt  DateTime
   priority   Priority     
   status     Status
+
 }
 
 

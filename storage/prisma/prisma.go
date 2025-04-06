@@ -60,6 +60,57 @@ func (s *Storage) CreateUser(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
+func (s *Storage) Users(ctx context.Context, page int, limit int) ([]*domain.User, error) {
+	const op = "storage.users.all"
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 6 // значение по умолчанию
+	}
+	skip := (page - 1) * limit
+
+	// Добавляем пагинацию и сортировку
+	usersDB, err := s.client.User.FindMany().
+		Take(limit). // Количество элементов на странице
+		Skip(skip).
+		OrderBy(db.User.CreatedAt.Order(db.ASC)). // Сколько элементов пропуститьA
+		Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var users []*domain.User
+	for _, userDB := range usersDB {
+		user := ValidateUser(userDB)
+		users = append(users, &user)
+	}
+	return users, nil
+
+}
+
+func (s *Storage) UpdateUser(ctx context.Context, user *domain.User) error {
+	const op = "storage.user.update"
+	_, err := s.client.User.FindUnique(db.User.ID.Equals(user.ID)).Update(
+		db.User.Login.Set(user.Login),
+		db.User.PasswordHash.Set(string(user.PassHash)),
+		db.User.FullName.Set(user.Name),
+		db.User.Role.Set(db.Role(user.IsAdmin)),
+	).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+func (s *Storage) DeleteUser(ctx context.Context, id string) error {
+	const op = "storage.user.delete"
+	_, err := s.client.User.FindUnique(db.User.ID.Equals(id)).Delete().Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
 // ARTICLE
 func (s *Storage) CreateArticle(ctx context.Context, article *domain.Article) (string, error) {
 	const op = "storage.article.create"
@@ -108,7 +159,6 @@ func (s *Storage) Articles(ctx context.Context, page, limit int) ([]*domain.Arti
 }
 
 func (s *Storage) Article(ctx context.Context, id string) (*domain.Article, error) {
-	const op = "storage.article.get"
 	articleDB, err := s.client.Article.FindUnique(
 		db.Article.ID.Equals(id),
 	).Exec(ctx)
@@ -209,7 +259,9 @@ func (s *Storage) CreateTask(ctx context.Context, task *domain.Task) (string, er
 	user := db.User.ID.Equals(task.UserID)
 	result, err := s.client.Task.CreateOne(
 		db.Task.Title.Set(task.Title),
-		db.Task.User.Link(user),
+		db.Task.Content.Set(task.Content),
+		db.Task.Image.Set(task.Image),
+		db.Task.Responsibleuser.Link(user),
 		db.Task.PlannedAt.Set(task.PlannedAt),
 		db.Task.Priority.Set(db.Priority(task.Priority)),
 		db.Task.Status.Set(db.Status(task.Status)),
@@ -221,8 +273,33 @@ func (s *Storage) CreateTask(ctx context.Context, task *domain.Task) (string, er
 	return result.ID, nil
 }
 
+func (s *Storage) Tasks(ctx context.Context, page, limit int) ([]*domain.Task, error) {
+	const op = "storage.task.all"
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 6 // значение по умолчанию
+	}
+	skip := (page - 1) * limit
+	tasksDB, err := s.client.Task.FindMany().
+		Take(limit). // Количество элементов на странице
+		Skip(skip).
+		OrderBy(db.Task.CreatedAt.Order(db.ASC)). // Сколько элементов пропуститьA
+		Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var tasks []*domain.Task
+	for _, taskDB := range tasksDB {
+		task := ValidateTask(taskDB)
+		tasks = append(tasks, &task)
+	}
+	return tasks, nil
+}
 func (s *Storage) Task(ctx context.Context, id string) (*domain.Task, error) {
-	const op = "storage.task.get"
 	taskDB, err := s.client.Task.FindUnique(db.Task.ID.Equals(id)).Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("task not found")
@@ -230,4 +307,30 @@ func (s *Storage) Task(ctx context.Context, id string) (*domain.Task, error) {
 	task := ValidateTask(*taskDB)
 	return &task, nil
 
+}
+func (s *Storage) UpdateTask(ctx context.Context, task *domain.Task) error {
+	const op = "storage.task.update"
+	_, err := s.client.Task.FindUnique(db.Task.ID.Equals(task.ID)).Update(
+		db.Task.Title.Set(task.Title),
+		db.Task.Content.Set(task.Content),
+		db.Task.Image.Set(task.Image),
+		db.Task.UserID.Set(task.UserID),
+		db.Task.PlannedAt.Set(task.PlannedAt),
+		db.Task.Priority.Set(db.Priority(task.Priority)),
+		db.Task.Status.Set(db.Status(task.Status)),
+	).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+
+}
+
+func (s *Storage) DeleteTask(ctx context.Context, id string) error {
+	const op = "storage.task.delete"
+	_, err := s.client.Task.FindUnique(db.Task.ID.Equals(id)).Delete().Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }

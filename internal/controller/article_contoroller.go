@@ -3,6 +3,7 @@ package controller
 import (
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/immxrtalbeast/TTK_backend/internal/domain"
@@ -39,19 +40,11 @@ func (c *ArticleController) Article(ctx *gin.Context) {
 }
 
 func (c *ArticleController) Articles(ctx *gin.Context) {
-	type ArticlesRequest struct {
-		Page  int `json:"page"`
-		Limit int `json:"limit"`
-	}
-	var req ArticlesRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid request body",
-			"details": err.Error(),
-		})
-		return
-	}
-	articles, err := c.interactor.Articles(ctx, req.Page, req.Limit)
+	pageStr := ctx.DefaultQuery("p", "1")
+	limitStr := ctx.DefaultQuery("limit", "6")
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+	articles, err := c.interactor.Articles(ctx, page, limit)
 	if err != nil {
 		ctx.JSON(http.StatusNoContent, gin.H{
 			"error":   "failed to create article",

@@ -3,6 +3,8 @@ package controller
 import (
 	"net/http"
 	"regexp"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/immxrtalbeast/TTK_backend/internal/domain"
@@ -117,5 +119,51 @@ func (c *UserController) Login(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"token": token,
 	})
+
+}
+func (c *UserController) Users(ctx *gin.Context) {
+	pageStr := ctx.DefaultQuery("p", "1")
+	limitStr := ctx.DefaultQuery("limit", "6")
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+	users, err := c.interactor.Users(ctx, page, limit)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to get users",
+			"details": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"users": users,
+	})
+
+}
+func (c *UserController) UpdateUser(ctx *gin.Context) {
+	type UpdateUserRequest struct {
+		ID        string    `json:"id" binding:"required"`
+		Name      string    `json:"name" binding:"required"`
+		Login     string    `json:"login" binding:"required"`
+		PassHash  []byte    `json:"passhash" binding:"required"`
+		CreatedAt time.Time `json:"createdat"`
+		IsAdmin   domain.Role
+	}
+	var req UpdateUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid request body",
+			"details": err.Error(),
+		})
+		return
+	}
+	err := c.interactor.UpdateUser(ctx, req.ID, req.Name, req.Login, string(req.PassHash), req.IsAdmin)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to get users",
+			"details": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{})
 
 }
